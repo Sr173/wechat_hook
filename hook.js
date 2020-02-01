@@ -25,28 +25,20 @@ function show_java_call_stack() {
 Java.perform(function () {
     var protocal = Java.use("com.tencent.mm.protocal.MMProtocalJni");
     var xlog = Java.use("com.tencent.mars.xlog.Xlog");
+    var PByteArray = Java.use("com.tencent.mm.pointers.PByteArray");
 
-    //xlog.logWrite2.implementation = function(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8 ) {
-    //    console.log("ON_LOG", arg8);
-    //    return xlog.logWrite2(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8)
-    //};
+    xlog.logWrite2.implementation = function(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8 ) {
+        //show_java_call_stack();
+        //console.log("ON_LOG", arg8);
+        return xlog.logWrite2(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8)
+    };
 
-    Process.enumerateModules({
-        onMatch: function (exp) {
-            send(exp.name)
-        },
-        onComplete: function () {
-            send("stop")
-        }
-    });
-
-
-        Interceptor.attach(Module.findExportByName("libwechatxlog.so", "Java_com_tencent_mars_xlog_Xlog_logWrite2"), {
-            onEnter: function (args) {
-                console.log("ON_LOG", Java.cast(args[12], StringClass));
-            },
-            onLeave: function (retval) {
-            }
-        });
-
+    protocal.pack.implementation = function(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13){
+        show_java_call_stack();
+        var tmp = Java.cast(arg1, PByteArray);
+        console.log(toHexString(tmp.value.value));
+        var ret = this.pack(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13);
+        console.log(toHexString(tmp.value.value));
+        return ret
+    };
 });
